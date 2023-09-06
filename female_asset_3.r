@@ -41,6 +41,7 @@ filter(asset_class == 3)
 # list the column names
 # describe the distributions of the propensity scores predicted by logit and xgboost models
 
+
 female.propensity.prediction.full <- female %>%
   drop_na(.,s_wave_age,s_eduyrs,num_shared_child,age_diff 
           ,s_mean_drink_days,s_mean_drink_num,s_mean_hosp_time 
