@@ -290,107 +290,107 @@ ggplot(new_data_linear, aes(x = ps.logit, y = linear.fit.ci.mean)) +
 }
 male <- read_dta("../male.dta")
 main_line(male)
-ggsave("male_dr_line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/male_dr_line_1.png",width = 8, height = 6, units = "in")
 
 female <- read_dta("../female.dta")
 main_line(female)
-ggsave("female_dr_Line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/female_dr_Line_1.png",width = 8, height = 6, units = "in")
 
 # select male education
 male_college <- male %>% 
 filter(college == 1)
 
 main_line(male_college)
-ggsave("male_college_dr_line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/male_college_dr_line_1.png",width = 8, height = 6, units = "in")
 
 male_noncollege <- male %>% 
 filter(college == 0)
 
 main_line(male_noncollege)
-ggsave("male_noncollege_dr_line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/male_noncollege_dr_line_1.png",width = 8, height = 6, units = "in")
 
 female_college <- female %>%
 filter(college == 1)
 
 main_line(female_college)
-ggsave("female_college_dr_line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/female_college_dr_line_1.png",width = 8, height = 6, units = "in")
 
 female_noncollege <- female %>%
 filter(college != 1)
 
 main_line(female_noncollege)
-ggsave("female_noncollege_dr_line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/female_noncollege_dr_line_1.png",width = 8, height = 6, units = "in")
 
 male_edu1 <- male %>%
 filter(college_homo == 1)
 main_line(male_edu1)
-ggsave("male_college_homo_dr_line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/male_college_homo_dr_line_1.png",width = 8, height = 6, units = "in")
 
 male_edu2 <- male %>%
 filter(college_homo !=1)
 main_line(male_edu2)
-ggsave("male_college_homo_dr_line_2.png",width = 8, height = 6, units = "in")
+ggsave("full/male_college_homo_dr_line_2.png",width = 8, height = 6, units = "in")
 
 male_edu_homo <- male %>%
 filter(college_homo == 1 | college_homo == 4)
 main_line(male_edu_homo)
-ggsave("male_college_homo_dr_line_homo.png",width = 8, height = 6, units = "in")
+ggsave("full/male_college_homo_dr_line_homo.png",width = 8, height = 6, units = "in")
 
 male_edu_hetero <- male %>%
 filter(college_homo == 2 | college_homo == 3)
 main_line(male_edu_hetero)
-ggsave("male_college_homo_dr_line_hetero.png",width = 8, height = 6, units = "in")
+ggsave("full/male_college_homo_dr_line_hetero.png",width = 8, height = 6, units = "in")
 
 
 
 female_edu1 <- female %>%
 filter(college_homo == 1)
 main_line(female_edu1)
-ggsave("female_college_homo_dr_line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/female_college_homo_dr_line_1.png",width = 8, height = 6, units = "in")
 
 female_edu2 <- female %>%
 filter(college_homo !=1)
 main_line(female_edu2)
-ggsave("female_college_homo_dr_line_2.png",width = 8, height = 6, units = "in")
+ggsave("full/female_college_homo_dr_line_2.png",width = 8, height = 6, units = "in")
 
 female_edu_homo <- female %>%
 filter(college_homo == 1 | college_homo == 4)
 main_line(female_edu_homo)
-ggsave("female_college_homo_dr_line_homo.png",width = 8, height = 6, units = "in")
+ggsave("full/female_college_homo_dr_line_homo.png",width = 8, height = 6, units = "in")
 
 female_edu_hetero <- female %>%
 filter(college_homo == 2 | college_homo == 3)
 main_line(female_edu_hetero)
-ggsave("female_college_homo_dr_line_hetero.png",width = 8, height = 6, units = "in")
+ggsave("full/female_college_homo_dr_line_hetero.png",width = 8, height = 6, units = "in")
 
 # assets 
 male_asset_1 <- male %>%
 filter(asset_class == 1)
 main_line(male_asset_1)
-ggsave("male_asset_dr_line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/male_asset_dr_line_1.png",width = 8, height = 6, units = "in")
 
 male_asset_2 <- male %>%
 filter(asset_class == 2)
 main_line(male_asset_2)
-ggsave("male_asset_dr_line_2.png",width = 8, height = 6, units = "in")
+ggsave("full/male_asset_dr_line_2.png",width = 8, height = 6, units = "in")
 
 male_asset_3 <- male %>%
 filter(asset_class == 3)
 main_line(male_asset_3)
-ggsave("male_asset_dr_line_3.png",width = 8, height = 6, units = "in")
+ggsave("full/male_asset_dr_line_3.png",width = 8, height = 6, units = "in")
 
 # female 
 female_asset_1 <- female %>%
 filter(asset_class == 1)
 main_line(female_asset_1)
-ggsave("female_asset_dr_line_1.png",width = 8, height = 6, units = "in")
+ggsave("full/female_asset_dr_line_1.png",width = 8, height = 6, units = "in")
 
 female_asset_2 <- female %>%
 filter(asset_class == 2)
 main_line(female_asset_2)
-ggsave("female_asset_dr_line_2.png",width = 8, height = 6, units = "in")
+ggsave("full/female_asset_dr_line_2.png",width = 8, height = 6, units = "in")
 
 female_asset_3 <- female %>%
 filter(asset_class == 3)
 main_line(female_asset_3)
-ggsave("female_asset_dr_line_3.png",width = 8, height = 6, units = "in")
+ggsave("full/female_asset_dr_line_3.png",width = 8, height = 6, units = "in")

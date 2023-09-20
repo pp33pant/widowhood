@@ -283,10 +283,12 @@ new_data_linear <- data.frame(ps.logit, ci_lower_linear, ci_upper_linear, linear
 
 new_data_linear
 }
-male <- read_dta("../male.dta")
+male <- read_dta("../male.dta") %>%
+filter(white == 1)
 male_line <- main_line(male)
 
-female <- read_dta("../female.dta")
+female <- read_dta("../female.dta") %>%
+filter(white == 1)
 female_line <- main_line(female)
 
 # select male education
@@ -356,6 +358,6 @@ female_asset_line_3 <- main_line(female_asset_3)
 save(male_line, female_line, male_line_college, male_line_noncollege, female_line_college, female_line_noncollege, 
  male_edu_line_homo, male_edu_line_hetero, female_edu_line_homo, female_edu_line_hetero, 
  male_asset_line_1, male_asset_line_2, male_asset_line_3, female_asset_line_1, female_asset_line_2,
- female_asset_line_3, file = "../data_for_graph.RData") 
+ female_asset_line_3, file = "../data_for_graph_white.RData") 
 
  
