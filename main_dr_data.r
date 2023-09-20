@@ -91,7 +91,14 @@ main_line <- function(data){
                         + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
                         + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_drop_na)
     summary(coxph.data.full)
-
+data_drop_na.copy <- data_drop_na
+# generate weight: weight = (widow - ps.logit)/(ps.logit)*(1- ps.logit)
+data_drop_na.copy$weight <- (data_drop_na$widow - data_drop_na$ps.logit)/(data_drop_na$ps.logit)*(1- data_drop_na$ps.logit)
+data_coxph_full_trt <- summary(survfit(coxph.data.full, newdata = data_drop_na))$table %>% as_tibble()
+data_drop_na.copy$diff <- data_drop_na$stop.age - data_coxph_full_trt$median
+data_drop_na.copy$ite <- data_drop_na.copy$weight * data_drop_na.copy$diff
+mean_of_ite <- mean(data_drop_na.copy$ite, na.rm = TRUE)
+ate_1 <- mean(data_drop_na.copy$ite - mean_of_ite, na.rm = TRUE)
     data_trt_0 <- data_drop_na %>% as_tibble() %>%
     filter(widow == 0) %>%
     select(-widow, -hhidpn)
@@ -248,11 +255,11 @@ main_line <- function(data){
 sd_cox_hte <- apply(hte_bootstrap_result, 1, function(x) sd(x, na.rm = TRUE))
 se_cox_hte <- sd_cox_hte / sqrt(sum(!apply(is.na(hte_bootstrap_result),2,any)))
 
-    ci_lower <- cox_hte$hte - 1.96 * se_cox_hte
-    ci_upper <- cox_hte$hte + 1.96 * se_cox_hte
-    ci_mean <- cox_hte$hte
+    ci_lower <- cox_hte$hte + ate_1 - 1.96 * se_cox_hte
+    ci_upper <- cox_hte$hte + ate_1 + 1.96 * se_cox_hte
+    ci_mean <- cox_hte$hte + ate_1
     ps.logit <- lower_bound_numeric
-    ate <- cox_ate$ate
+    ate <- cox_ate$ate + ate_1
 
 
     # generate the new data for plotting 
@@ -268,122 +275,85 @@ se_cox_hte <- sd_cox_hte / sqrt(sum(!apply(is.na(hte_bootstrap_result),2,any)))
 
     # linear results
 linear.fit.ci.mean <- predict(lm(ci_mean ~ ps.logit, data = new_data), newdata = new_data)
-ci_lower_linear <- linear.fit.ci.mean - 1.96 * se_cox_hte
-ci_upper_linear <- linear.fit.ci.mean + 1.96 * se_cox_hte
+ci_lower_linear <- linear.fit.ci.mean + ate_1 - 1.96 * se_cox_hte
+ci_upper_linear <- linear.fit.ci.mean + ate_1 + 1.96 * se_cox_hte
 ps.logit <- lower_bound_numeric
-ate <- cox_ate$ate
+ate <- cox_ate$ate + ate_1
 new_data_linear <- data.frame(ps.logit, ci_lower_linear, ci_upper_linear, linear.fit.ci.mean, ate)
 
-ggplot(new_data_linear, aes(x = ps.logit, y = linear.fit.ci.mean)) +
-  geom_smooth(color = "blue", se = FALSE) +
-  geom_ribbon(aes(ymin = ci_lower_linear, ymax = ci_upper_linear), alpha = 0.2, fill = "blue") +
-  geom_hline(yintercept = ate, color = "red") +
-  xlab("Propensity Scores for Widowhood") + ylab("Age Differences between Treatment and Control")
-
+new_data_linear
 }
 male <- read_dta("../male.dta")
-main_line(male)
-ggsave("male_naive_line_1.png",width = 8, height = 6, units = "in")
+male_line <- main_line(male)
 
 female <- read_dta("../female.dta")
-main_line(female)
-ggsave("female_naive_Line_1.png",width = 8, height = 6, units = "in")
+female_line <- main_line(female)
 
 # select male education
 male_college <- male %>% 
 filter(college == 1)
-
-main_line(male_college)
-ggsave("male_college_naive_line_1.png",width = 8, height = 6, units = "in")
+male_line_college <- main_line(male_college)
 
 male_noncollege <- male %>% 
 filter(college == 0)
-
-main_line(male_noncollege)
-ggsave("male_noncollege_naive_line_1.png",width = 8, height = 6, units = "in")
+male_line_noncollege <- main_line(male_noncollege)
 
 female_college <- female %>%
 filter(college == 1)
-
-main_line(female_college)
-ggsave("female_college_naive_line_1.png",width = 8, height = 6, units = "in")
+female_line_college <- main_line(female_college)
 
 female_noncollege <- female %>%
 filter(college != 1)
+female_line_noncollege <- main_line(female_noncollege)
 
-main_line(female_noncollege)
-ggsave("female_noncollege_naive_line_1.png",width = 8, height = 6, units = "in")
 
-male_edu1 <- male %>%
-filter(college_homo == 1)
-main_line(male_edu1)
-ggsave("male_college_homo_line_1.png",width = 8, height = 6, units = "in")
-
-male_edu2 <- male %>%
-filter(college_homo !=1)
-main_line(male_edu2)
-ggsave("male_college_homo_line_2.png",width = 8, height = 6, units = "in")
 
 male_edu_homo <- male %>%
 filter(college_homo == 1 | college_homo == 4)
-main_line(male_edu_homo)
-ggsave("male_college_homo_line_homo.png",width = 8, height = 6, units = "in")
+male_edu_line_homo <- main_line(male_edu_homo)
 
 male_edu_hetero <- male %>%
 filter(college_homo == 2 | college_homo == 3)
-main_line(male_edu_hetero)
-ggsave("male_college_homo_line_hetero.png",width = 8, height = 6, units = "in")
+male_edu_line_hetero <- main_line(male_edu_hetero)
 
 
-
-female_edu1 <- female %>%
-filter(college_homo == 1)
-main_line(female_edu1)
-ggsave("female_college_homo_line_1.png",width = 8, height = 6, units = "in")
-
-female_edu2 <- female %>%
-filter(college_homo !=1)
-main_line(female_edu2)
-ggsave("female_college_homo_line_2.png",width = 8, height = 6, units = "in")
 
 female_edu_homo <- female %>%
 filter(college_homo == 1 | college_homo == 4)
-main_line(female_edu_homo)
-ggsave("female_college_homo_line_homo.png",width = 8, height = 6, units = "in")
+female_edu_line_homo <- main_line(female_edu_homo)
 
 female_edu_hetero <- female %>%
 filter(college_homo == 2 | college_homo == 3)
-main_line(female_edu_hetero)
-ggsave("female_college_homo_line_hetero.png",width = 8, height = 6, units = "in")
+female_edu_line_hetero <- main_line(female_edu_hetero)
 
 # assets 
+# male 
 male_asset_1 <- male %>%
 filter(asset_class == 1)
-main_line(male_asset_1)
-ggsave("male_asset_line_1.png",width = 8, height = 6, units = "in")
+male_asset_line_1 <- main_line(male_asset_1)
 
 male_asset_2 <- male %>%
 filter(asset_class == 2)
-main_line(male_asset_2)
-ggsave("male_asset_line_2.png",width = 8, height = 6, units = "in")
+male_asset_line_2 <- main_line(male_asset_2)
 
 male_asset_3 <- male %>%
 filter(asset_class == 3)
-main_line(male_asset_3)
-ggsave("male_asset_line_3.png",width = 8, height = 6, units = "in")
+male_asset_line_3 <- main_line(male_asset_3)
 
 # female 
 female_asset_1 <- female %>%
 filter(asset_class == 1)
-main_line(female_asset_1)
-ggsave("female_asset_line_1.png",width = 8, height = 6, units = "in")
+female_asset_line_1 <- main_line(female_asset_1)
 
 female_asset_2 <- female %>%
 filter(asset_class == 2)
-main_line(female_asset_2)
-ggsave("female_asset_line_2.png",width = 8, height = 6, units = "in")
+female_asset_line_2 <- main_line(female_asset_2)
 
 female_asset_3 <- female %>%
 filter(asset_class == 3)
-main_line(female_asset_3)
-ggsave("female_asset_line_3.png",width = 8, height = 6, units = "in")
+female_asset_line_3 <- main_line(female_asset_3)
+
+save(male_line, female_line, male_line_college, male_line_noncollege, female_line_college, female_line_noncollege, 
+ male_edu_line_homo, male_edu_line_hetero, female_edu_line_homo, female_edu_line_hetero, 
+ male_asset_line_1, male_asset_line_2, male_asset_line_3, female_asset_line_1, female_asset_line_2,
+ female_asset_line_3, file = "data_for_graph.RData")

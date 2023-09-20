@@ -37,21 +37,20 @@ ps.barplot <- function(ps, group){
 # attach data 
 # list the column names
 # describe the distributions of the propensity scores predicted by logit and xgboost models
-main_line <- function(data){
+main_line_race <- function(data){
     data.propensity.prediction.full <- data %>%
         drop_na(.,s_wave_age,s_eduyrs,num_shared_child,age_diff 
         ,s_mean_drink_days,s_mean_drink_num,s_mean_hosp_time 
            ,s_max_hosp_visit,s_max_pension,s_mean_bmi 
             ,s_max_nurs_home,s_mean_cesd,s_mean_expend,s_max_high_bp 
             ,s_max_diabetes,s_max_cancer,s_max_lung,s_max_heart,s_max_stroke 
-            ,s_max_psych,child_liv,s_ever_retired,s_white,s_black 
-            ,s_protestant,s_catholic,s_migration,s_year_since_retire)
+            ,s_max_psych,child_liv,s_ever_retired,s_protestant,s_catholic,s_migration,s_year_since_retire)
     ns.logit.func1 <- glm(widow  ~ s_wave_age+ s_eduyrs + num_shared_child + age_diff 
                         + s_mean_drink_days + s_mean_drink_num + s_mean_hosp_time 
                         + s_max_hosp_visit +  s_max_pension + s_mean_bmi 
                         + s_max_nurs_home + s_mean_cesd + s_mean_expend + s_max_high_bp 
                         + s_max_diabetes + s_max_cancer + s_max_lung + s_max_heart + s_max_stroke 
-                        + s_max_psych + child_liv + s_ever_retired + s_white + s_black 
+                        + s_max_psych + child_liv + s_ever_retired 
                         + s_protestant + s_catholic + s_migration + s_year_since_retire, data = data.propensity.prediction.full, family = binomial(link = "logit")) # nolint
     summary(ns.logit.func1)
 
@@ -82,13 +81,13 @@ main_line <- function(data){
     drop_na(data.full,start.age,stop.age,event,widow,ps.logit,birth_year,child_liv,migration,num_shared_child,child_dead,
             college_homo,racial_homo,reli_homo,inc_homo,geo_homo,age_diff,mean_drink_days,mean_drink_num,
             mean_hosp_time,max_hosp_visit,mean_log_fam_income,mean_bmi,max_nurs_home, 
-            mean_cesd,mean_expend,max_high_bp,max_diabetes,max_cancer,max_lung,max_heart,max_stroke,max_psych,eduyrs,white,black, 
+            mean_cesd,mean_expend,max_high_bp,max_diabetes,max_cancer,max_lung,max_heart,max_stroke,max_psych,eduyrs,
             catholic,protestant,ever_retired,labor_force, year_since_widow, year_since_child_dead, year_since_retire)
 
     coxph.data.full <- coxph(Surv(start.age, stop.age, event) ~ widow + ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
                         +  age_diff + mean_drink_days + mean_drink_num
                         + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
-                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
+                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs 
                         + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_drop_na)
     summary(coxph.data.full)
 
@@ -104,7 +103,7 @@ main_line <- function(data){
     coxph.data_trt_0 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
                         +  age_diff + mean_drink_days + mean_drink_num
                         + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
-                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
+                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs 
                         + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_trt_0)
     summary(coxph.data_trt_0)
 
@@ -112,7 +111,7 @@ main_line <- function(data){
     coxph.data_trt_1 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
                         +  age_diff + mean_drink_days + mean_drink_num
                         + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
-                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
+                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs 
                         + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_trt_1)
     summary(coxph.data_trt_1)
 
@@ -181,6 +180,7 @@ main_line <- function(data){
     hte_bootstrap_result <- matrix(ncol = B, nrow = 50)
     for (i in 1:B){
         tryCatch({
+
             data_resample <- data_drop_na[sample(nrow(data_drop_na), replace = TRUE), ]
             data_trt_0 <- data_resample %>% as_tibble() %>%
             filter(widow == 0) %>%
@@ -193,7 +193,7 @@ main_line <- function(data){
             coxph.data_trt_0 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
                                 +  age_diff + mean_drink_days + mean_drink_num
                                 + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
-                                + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
+                                + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs 
                                 + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_trt_0)
 
 
@@ -201,7 +201,7 @@ main_line <- function(data){
             coxph.data_trt_1 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
                                 +  age_diff + mean_drink_days + mean_drink_num
                                 + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
-                                + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
+                                + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs 
                                 + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_trt_1)
 
 
@@ -244,10 +244,8 @@ main_line <- function(data){
         })
     }
     # get the standard deviation of the bootstrap results
-
-sd_cox_hte <- apply(hte_bootstrap_result, 1, function(x) sd(x, na.rm = TRUE))
-se_cox_hte <- sd_cox_hte / sqrt(sum(!apply(is.na(hte_bootstrap_result),2,any)))
-
+    sd_cox_hte <- apply(hte_bootstrap_result, 1, function(x) sd(x, na.rm = TRUE))
+    se_cox_hte <- sd_cox_hte / sqrt(sum(!apply(is.na(hte_bootstrap_result),2,any)))
     ci_lower <- cox_hte$hte - 1.96 * se_cox_hte
     ci_upper <- cox_hte$hte + 1.96 * se_cox_hte
     ci_mean <- cox_hte$hte
@@ -281,109 +279,50 @@ ggplot(new_data_linear, aes(x = ps.logit, y = linear.fit.ci.mean)) +
   xlab("Propensity Scores for Widowhood") + ylab("Age Differences between Treatment and Control")
 
 }
-male <- read_dta("../male.dta")
-main_line(male)
-ggsave("male_naive_line_1.png",width = 8, height = 6, units = "in")
+male <- read_dta("male.dta")
+female <- read_dta("female.dta")
 
-female <- read_dta("../female.dta")
-main_line(female)
-ggsave("female_naive_Line_1.png",width = 8, height = 6, units = "in")
+# # race 
+# male_white <- male %>%
+# filter(white == 1)
+# main_line_race(male_white)
+# ggsave("male_white_line.png",width = 8, height = 6, units = "in")
 
-# select male education
-male_college <- male %>% 
-filter(college == 1)
+male_nonwhite <- male %>%
+filter(white != 1)
+main_line_race(male_nonwhite)
+ggsave("male_nonwhite_line.png",width = 8, height = 6, units = "in")
 
-main_line(male_college)
-ggsave("male_college_naive_line_1.png",width = 8, height = 6, units = "in")
+# # race 
+# female_white <- female %>%
+# filter(white == 1)
+# main_line_race(female_white)
+# ggsave("female_white_line.png",width = 8, height = 6, units = "in")
 
-male_noncollege <- male %>% 
-filter(college == 0)
+female_nonwhite <- female %>%
+filter(white != 1)
+main_line_race(female_nonwhite)
+ggsave("female_nonwhite_line.png",width = 8, height = 6, units = "in")
 
-main_line(male_noncollege)
-ggsave("male_noncollege_naive_line_1.png",width = 8, height = 6, units = "in")
+# # racial homogamy 
+# male_race_homo <- male %>%
+# filter(racial_homo == 1)
+# main_line_race(male_race_homo)
+# ggsave("male_white_homo_line.png",width = 8, height = 6, units = "in")
 
-female_college <- female %>%
-filter(college == 1)
+male_race_hetero <- male %>%
+filter(racial_homo != 1)
+main_line_race(male_race_hetero)
+ggsave("male_white_hetero_line.png",width = 8, height = 6, units = "in")
+ 
+# # racial homogamy 
+# female_race_homo <- female %>%
+# filter(racial_homo == 1)
+# main_line_race(female_race_homo)
+# ggsave("female_white_homo_line.png",width = 8, height = 6, units = "in")
 
-main_line(female_college)
-ggsave("female_college_naive_line_1.png",width = 8, height = 6, units = "in")
+female_race_hetero <- female %>%
+filter(racial_homo != 1)
+main_line_race(female_race_hetero)
+ggsave("female_white_hetero_line.png",width = 8, height = 6, units = "in")
 
-female_noncollege <- female %>%
-filter(college != 1)
-
-main_line(female_noncollege)
-ggsave("female_noncollege_naive_line_1.png",width = 8, height = 6, units = "in")
-
-male_edu1 <- male %>%
-filter(college_homo == 1)
-main_line(male_edu1)
-ggsave("male_college_homo_line_1.png",width = 8, height = 6, units = "in")
-
-male_edu2 <- male %>%
-filter(college_homo !=1)
-main_line(male_edu2)
-ggsave("male_college_homo_line_2.png",width = 8, height = 6, units = "in")
-
-male_edu_homo <- male %>%
-filter(college_homo == 1 | college_homo == 4)
-main_line(male_edu_homo)
-ggsave("male_college_homo_line_homo.png",width = 8, height = 6, units = "in")
-
-male_edu_hetero <- male %>%
-filter(college_homo == 2 | college_homo == 3)
-main_line(male_edu_hetero)
-ggsave("male_college_homo_line_hetero.png",width = 8, height = 6, units = "in")
-
-
-
-female_edu1 <- female %>%
-filter(college_homo == 1)
-main_line(female_edu1)
-ggsave("female_college_homo_line_1.png",width = 8, height = 6, units = "in")
-
-female_edu2 <- female %>%
-filter(college_homo !=1)
-main_line(female_edu2)
-ggsave("female_college_homo_line_2.png",width = 8, height = 6, units = "in")
-
-female_edu_homo <- female %>%
-filter(college_homo == 1 | college_homo == 4)
-main_line(female_edu_homo)
-ggsave("female_college_homo_line_homo.png",width = 8, height = 6, units = "in")
-
-female_edu_hetero <- female %>%
-filter(college_homo == 2 | college_homo == 3)
-main_line(female_edu_hetero)
-ggsave("female_college_homo_line_hetero.png",width = 8, height = 6, units = "in")
-
-# assets 
-male_asset_1 <- male %>%
-filter(asset_class == 1)
-main_line(male_asset_1)
-ggsave("male_asset_line_1.png",width = 8, height = 6, units = "in")
-
-male_asset_2 <- male %>%
-filter(asset_class == 2)
-main_line(male_asset_2)
-ggsave("male_asset_line_2.png",width = 8, height = 6, units = "in")
-
-male_asset_3 <- male %>%
-filter(asset_class == 3)
-main_line(male_asset_3)
-ggsave("male_asset_line_3.png",width = 8, height = 6, units = "in")
-
-# female 
-female_asset_1 <- female %>%
-filter(asset_class == 1)
-main_line(female_asset_1)
-ggsave("female_asset_line_1.png",width = 8, height = 6, units = "in")
-
-female_asset_2 <- female %>%
-filter(asset_class == 2)
-main_line(female_asset_2)
-ggsave("female_asset_line_2.png",width = 8, height = 6, units = "in")
-
-female_asset_3 <- female %>%
-filter(asset_class == 3)
-main_line(female_asset_3)
-ggsave("female_asset_line_3.png",width = 8, height = 6, units = "in")

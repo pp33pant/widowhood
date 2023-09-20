@@ -37,7 +37,7 @@ ps.barplot <- function(ps, group){
 # attach data 
 # list the column names
 # describe the distributions of the propensity scores predicted by logit and xgboost models
-main_line <- function(data){
+main <- function(data){
     data.propensity.prediction.full <- data %>%
         drop_na(.,s_wave_age,s_eduyrs,num_shared_child,age_diff 
         ,s_mean_drink_days,s_mean_drink_num,s_mean_hosp_time 
@@ -180,74 +180,68 @@ main_line <- function(data){
     B = 100
     hte_bootstrap_result <- matrix(ncol = B, nrow = 50)
     for (i in 1:B){
-        tryCatch({
-            data_resample <- data_drop_na[sample(nrow(data_drop_na), replace = TRUE), ]
-            data_trt_0 <- data_resample %>% as_tibble() %>%
-            filter(widow == 0) %>%
-            select(-widow, -hhidpn)
-            
-            data_trt_1 <- data_resample %>% as_tibble() %>%
-            filter(widow == 1) %>%
-            select(-widow, -hhidpn)
-            
-            coxph.data_trt_0 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
-                                +  age_diff + mean_drink_days + mean_drink_num
-                                + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
-                                + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
-                                + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_trt_0)
+    data_resample <- data_drop_na[sample(nrow(data_drop_na), replace = TRUE), ]
+    data_trt_0 <- data_resample %>% as_tibble() %>%
+    filter(widow == 0) %>%
+    select(-widow, -hhidpn)
+    
+    data_trt_1 <- data_resample %>% as_tibble() %>%
+    filter(widow == 1) %>%
+    select(-widow, -hhidpn)
+    
+    coxph.data_trt_0 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
+                        +  age_diff + mean_drink_days + mean_drink_num
+                        + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
+                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
+                        + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_trt_0)
 
 
-            # survival: treatment model
-            coxph.data_trt_1 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
-                                +  age_diff + mean_drink_days + mean_drink_num
-                                + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
-                                + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
-                                + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_trt_1)
+    # survival: treatment model
+    coxph.data_trt_1 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
+                        +  age_diff + mean_drink_days + mean_drink_num
+                        + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
+                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
+                        + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = data_trt_1)
 
 
-            # predict the outcome under control with trt_0:
+    # predict the outcome under control with trt_0:
 
-            data_coxph_full_trt_1_trt_1 <- summary(survfit(coxph.data_trt_1, newdata = data_trt_1))$table %>% as_tibble()
-            data_coxph_full_trt_1_trt_0 <- summary(survfit(coxph.data_trt_1, newdata = data_trt_0))$table %>% as_tibble()
-            data_coxph_full_trt_0_trt_0 <- summary(survfit(coxph.data_trt_0, newdata = data_trt_0))$table %>% as_tibble()
-            data_coxph_full_trt_0_trt_1 <- summary(survfit(coxph.data_trt_0, newdata = data_trt_1))$table %>% as_tibble()
-            ps.logit.category <- cut(data_drop_na$ps.logit, breaks = c(quantile(data_drop_na$ps.logit, probs = seq(0, 1, by = 0.02))), include.lowest = T, lables = 1:50)
+    data_coxph_full_trt_1_trt_1 <- summary(survfit(coxph.data_trt_1, newdata = data_trt_1))$table %>% as_tibble()
+    data_coxph_full_trt_1_trt_0 <- summary(survfit(coxph.data_trt_1, newdata = data_trt_0))$table %>% as_tibble()
+    data_coxph_full_trt_0_trt_0 <- summary(survfit(coxph.data_trt_0, newdata = data_trt_0))$table %>% as_tibble()
+    data_coxph_full_trt_0_trt_1 <- summary(survfit(coxph.data_trt_0, newdata = data_trt_1))$table %>% as_tibble()
+    ps.logit.category <- cut(data_drop_na$ps.logit, breaks = c(quantile(data_drop_na$ps.logit, probs = seq(0, 1, by = 0.02))), include.lowest = T, lables = 1:50)
 
-            data_coxph_full_trt_1 <- data_coxph_full_trt_1_trt_1 %>% 
-            bind_rows(data_coxph_full_trt_1_trt_0) %>% 
-            bind_cols(ps.logit = ps.logit.category) %>% 
-            select(median, ps.logit) %>% 
-            rename(median_trt1 = median,
-                    ps.logit_trt1 = ps.logit)
+    data_coxph_full_trt_1 <- data_coxph_full_trt_1_trt_1 %>% 
+    bind_rows(data_coxph_full_trt_1_trt_0) %>% 
+    bind_cols(ps.logit = ps.logit.category) %>% 
+    select(median, ps.logit) %>% 
+    rename(median_trt1 = median,
+            ps.logit_trt1 = ps.logit)
 
 
-            data_coxph_full_trt_0 <- data_coxph_full_trt_0_trt_1 %>% 
-                bind_rows(data_coxph_full_trt_0_trt_0) %>% 
-                bind_cols(ps.logit = ps.logit.category) %>% 
-                select(median, ps.logit) %>% 
-                rename(median_trt0 = median,
-                        ps.logit_trt0 = ps.logit)
+    data_coxph_full_trt_0 <- data_coxph_full_trt_0_trt_1 %>% 
+        bind_rows(data_coxph_full_trt_0_trt_0) %>% 
+        bind_cols(ps.logit = ps.logit.category) %>% 
+        select(median, ps.logit) %>% 
+        rename(median_trt0 = median,
+                ps.logit_trt0 = ps.logit)
 
-            cox_hte_boot <- data_coxph_full_trt_1 %>% 
-                bind_cols(data_coxph_full_trt_0) %>% 
-                select(-ps.logit_trt1) %>% 
-                rename(ps.logit = ps.logit_trt0) %>% 
-                group_by(ps.logit) %>%
-                mutate(hte = median_trt1 -  median_trt0) %>%
-                drop_na() %>%
-                # pull(hte) %>% mean
-                summarise(lower_hte = quantile(hte, .025), upper_hte = quantile (hte, .975),hte = mean(hte), treated = mean(median_trt1), control = mean(median_trt0)) # for full model 
+    cox_hte_boot <- data_coxph_full_trt_1 %>% 
+        bind_cols(data_coxph_full_trt_0) %>% 
+        select(-ps.logit_trt1) %>% 
+        rename(ps.logit = ps.logit_trt0) %>% 
+        group_by(ps.logit) %>%
+        mutate(hte = median_trt1 -  median_trt0) %>%
+        drop_na() %>%
+        # pull(hte) %>% mean
+        summarise(lower_hte = quantile(hte, .025), upper_hte = quantile (hte, .975),hte = mean(hte), treated = mean(median_trt1), control = mean(median_trt0)) # for full model 
 
-            hte_bootstrap_result[,i] <- cox_hte_boot$hte
-        }, error = function(e) {
-            hte_bootstrap_result[,i] <- NA
-        })
+    hte_bootstrap_result[,i] <- cox_hte_boot$hte
     }
     # get the standard deviation of the bootstrap results
-
-sd_cox_hte <- apply(hte_bootstrap_result, 1, function(x) sd(x, na.rm = TRUE))
-se_cox_hte <- sd_cox_hte / sqrt(sum(!apply(is.na(hte_bootstrap_result),2,any)))
-
+    sd_cox_hte <- apply(hte_bootstrap_result, 1, sd)
+    se_cox_hte <- sd_cox_hte / sqrt(nrow(hte_bootstrap_result))
     ci_lower <- cox_hte$hte - 1.96 * se_cox_hte
     ci_upper <- cox_hte$hte + 1.96 * se_cox_hte
     ci_mean <- cox_hte$hte
@@ -266,124 +260,52 @@ se_cox_hte <- sd_cox_hte / sqrt(sum(!apply(is.na(hte_bootstrap_result),2,any)))
     geom_hline(yintercept = ate, color = "red") +
     xlab("Propensity Scores for Widowhood") + ylab("Age Differences between Treatment and Control")
 
-    # linear results
-linear.fit.ci.mean <- predict(lm(ci_mean ~ ps.logit, data = new_data), newdata = new_data)
-ci_lower_linear <- linear.fit.ci.mean - 1.96 * se_cox_hte
-ci_upper_linear <- linear.fit.ci.mean + 1.96 * se_cox_hte
-ps.logit <- lower_bound_numeric
-ate <- cox_ate$ate
-new_data_linear <- data.frame(ps.logit, ci_lower_linear, ci_upper_linear, linear.fit.ci.mean, ate)
+    # smooth the results
+    smooth_data <- new_data %>% 
+    mutate(ci_lower = smooth.spline(ci_lower, spar = 0.5)$y,
+            ci_upper = smooth.spline(ci_upper, spar = 0.5)$y,
+            ci_mean = smooth.spline(ci_mean, spar = 0.5)$y,
+            ate = smooth.spline(ate, spar = 0.5)$y)
 
-ggplot(new_data_linear, aes(x = ps.logit, y = linear.fit.ci.mean)) +
-  geom_smooth(color = "blue", se = FALSE) +
-  geom_ribbon(aes(ymin = ci_lower_linear, ymax = ci_upper_linear), alpha = 0.2, fill = "blue") +
-  geom_hline(yintercept = ate, color = "red") +
-  xlab("Propensity Scores for Widowhood") + ylab("Age Differences between Treatment and Control")
+    # plot the results based on the smoothed data
+    p <- ggplot(smooth_data, aes(x = ps.logit, y = ci_mean)) +
+    geom_line(color = "blue") +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2, fill = "blue") +
+    geom_hline(yintercept = ate, color = "red") +
+    xlab("Propensity Scores for Widowhood") + ylab("Age Differences between Treatment and Control")
 
+    p
 }
 male <- read_dta("../male.dta")
-main_line(male)
-ggsave("male_naive_line_1.png",width = 8, height = 6, units = "in")
+main(male)
+ggsave("male_naive_1.png",width = 8, height = 6, units = "in")
 
 female <- read_dta("../female.dta")
-main_line(female)
-ggsave("female_naive_Line_1.png",width = 8, height = 6, units = "in")
+main(female)
+ggsave("female_naive_1.png",width = 8, height = 6, units = "in")
 
 # select male education
 male_college <- male %>% 
 filter(college == 1)
 
-main_line(male_college)
-ggsave("male_college_naive_line_1.png",width = 8, height = 6, units = "in")
+main(male_college)
+ggsave("male_college_naive_1.png",width = 8, height = 6, units = "in")
 
 male_noncollege <- male %>% 
 filter(college == 0)
 
-main_line(male_noncollege)
-ggsave("male_noncollege_naive_line_1.png",width = 8, height = 6, units = "in")
+main(male_noncollege)
+ggsave("male_noncollege_naive_1.png",width = 8, height = 6, units = "in")
 
 female_college <- female %>%
 filter(college == 1)
 
-main_line(female_college)
-ggsave("female_college_naive_line_1.png",width = 8, height = 6, units = "in")
+main(female_college)
+ggsave("female_college_naive_1.png",width = 8, height = 6, units = "in")
 
 female_noncollege <- female %>%
 filter(college != 1)
 
-main_line(female_noncollege)
-ggsave("female_noncollege_naive_line_1.png",width = 8, height = 6, units = "in")
+main(female_noncollege)
+ggsave("female_noncollege_naive_1.png",width = 8, height = 6, units = "in")
 
-male_edu1 <- male %>%
-filter(college_homo == 1)
-main_line(male_edu1)
-ggsave("male_college_homo_line_1.png",width = 8, height = 6, units = "in")
-
-male_edu2 <- male %>%
-filter(college_homo !=1)
-main_line(male_edu2)
-ggsave("male_college_homo_line_2.png",width = 8, height = 6, units = "in")
-
-male_edu_homo <- male %>%
-filter(college_homo == 1 | college_homo == 4)
-main_line(male_edu_homo)
-ggsave("male_college_homo_line_homo.png",width = 8, height = 6, units = "in")
-
-male_edu_hetero <- male %>%
-filter(college_homo == 2 | college_homo == 3)
-main_line(male_edu_hetero)
-ggsave("male_college_homo_line_hetero.png",width = 8, height = 6, units = "in")
-
-
-
-female_edu1 <- female %>%
-filter(college_homo == 1)
-main_line(female_edu1)
-ggsave("female_college_homo_line_1.png",width = 8, height = 6, units = "in")
-
-female_edu2 <- female %>%
-filter(college_homo !=1)
-main_line(female_edu2)
-ggsave("female_college_homo_line_2.png",width = 8, height = 6, units = "in")
-
-female_edu_homo <- female %>%
-filter(college_homo == 1 | college_homo == 4)
-main_line(female_edu_homo)
-ggsave("female_college_homo_line_homo.png",width = 8, height = 6, units = "in")
-
-female_edu_hetero <- female %>%
-filter(college_homo == 2 | college_homo == 3)
-main_line(female_edu_hetero)
-ggsave("female_college_homo_line_hetero.png",width = 8, height = 6, units = "in")
-
-# assets 
-male_asset_1 <- male %>%
-filter(asset_class == 1)
-main_line(male_asset_1)
-ggsave("male_asset_line_1.png",width = 8, height = 6, units = "in")
-
-male_asset_2 <- male %>%
-filter(asset_class == 2)
-main_line(male_asset_2)
-ggsave("male_asset_line_2.png",width = 8, height = 6, units = "in")
-
-male_asset_3 <- male %>%
-filter(asset_class == 3)
-main_line(male_asset_3)
-ggsave("male_asset_line_3.png",width = 8, height = 6, units = "in")
-
-# female 
-female_asset_1 <- female %>%
-filter(asset_class == 1)
-main_line(female_asset_1)
-ggsave("female_asset_line_1.png",width = 8, height = 6, units = "in")
-
-female_asset_2 <- female %>%
-filter(asset_class == 2)
-main_line(female_asset_2)
-ggsave("female_asset_line_2.png",width = 8, height = 6, units = "in")
-
-female_asset_3 <- female %>%
-filter(asset_class == 3)
-main_line(female_asset_3)
-ggsave("female_asset_line_3.png",width = 8, height = 6, units = "in")

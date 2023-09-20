@@ -35,12 +35,9 @@ ps.barplot <- function(ps, group){
 }
 
 # attach data 
-data <- read_dta("../female.dta")
-female <- female %>% 
-filter(asset_class == 3)
+female <- read_dta("../female.dta")
 # list the column names
 # describe the distributions of the propensity scores predicted by logit and xgboost models
-
 
 female.propensity.prediction.full <- female %>%
   drop_na(.,s_wave_age,s_eduyrs,num_shared_child,age_diff 
@@ -96,6 +93,7 @@ coxph.female.full <- coxph(Surv(start.age, stop.age, event) ~ widow + ps.logit +
                     + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = female_drop_na)
 summary(coxph.female.full)
 
+# generate weight: weight = 
 female_trt_0 <- female_drop_na %>% as_tibble() %>%
   filter(widow == 0) %>%
   select(-widow, -hhidpn)
@@ -184,76 +182,68 @@ ggplot(table_for_graph, aes(x = ps, fill = object, group = object, linetype = ob
 B = 100
 hte_bootstrap_result <- matrix(ncol = B, nrow = 50)
 for (i in 1:B){
-    tryCatch({
-    female_resample <- female_drop_na[sample(nrow(female_drop_na), replace = TRUE), ]
-    female_trt_0 <- female_resample %>% as_tibble() %>%
-    filter(widow == 0) %>%
-    select(-widow, -hhidpn)
-    
-    female_trt_1 <- female_resample %>% as_tibble() %>%
-    filter(widow == 1) %>%
-    select(-widow, -hhidpn)
-    
-    coxph.female_trt_0 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
-                        +  age_diff + mean_drink_days + mean_drink_num
-                        + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
-                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
-                        + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = female_trt_0)
+  female_resample <- female_drop_na[sample(nrow(female_drop_na), replace = TRUE), ]
+  female_trt_0 <- female_resample %>% as_tibble() %>%
+  filter(widow == 0) %>%
+  select(-widow, -hhidpn)
+  
+  female_trt_1 <- female_resample %>% as_tibble() %>%
+  filter(widow == 1) %>%
+  select(-widow, -hhidpn)
+  
+  coxph.female_trt_0 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
+                    +  age_diff + mean_drink_days + mean_drink_num
+                    + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
+                    + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
+                    + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = female_trt_0)
 
 
-    # survival: treatment model
-    coxph.female_trt_1 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
-                        +  age_diff + mean_drink_days + mean_drink_num
-                        + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
-                        + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
-                        + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = female_trt_1)
+# survival: treatment model
+  coxph.female_trt_1 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
+                      +  age_diff + mean_drink_days + mean_drink_num
+                      + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
+                      + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
+                      + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = female_trt_1)
 
 
-    # predict the outcome under control with trt_0:
+# predict the outcome under control with trt_0:
 
-    female_coxph_full_trt_1_trt_1 <- summary(survfit(coxph.female_trt_1, newdata = female_trt_1))$table %>% as_tibble()
-    female_coxph_full_trt_1_trt_0 <- summary(survfit(coxph.female_trt_1, newdata = female_trt_0))$table %>% as_tibble()
-    female_coxph_full_trt_0_trt_0 <- summary(survfit(coxph.female_trt_0, newdata = female_trt_0))$table %>% as_tibble()
-    female_coxph_full_trt_0_trt_1 <- summary(survfit(coxph.female_trt_0, newdata = female_trt_1))$table %>% as_tibble()
-    ps.logit.category <- cut(female_drop_na$ps.logit, breaks = c(quantile(female_drop_na$ps.logit, probs = seq(0, 1, by = 0.02))), include.lowest = T, lables = 1:50)
+  female_coxph_full_trt_1_trt_1 <- summary(survfit(coxph.female_trt_1, newdata = female_trt_1))$table %>% as_tibble()
+  female_coxph_full_trt_1_trt_0 <- summary(survfit(coxph.female_trt_1, newdata = female_trt_0))$table %>% as_tibble()
+  female_coxph_full_trt_0_trt_0 <- summary(survfit(coxph.female_trt_0, newdata = female_trt_0))$table %>% as_tibble()
+  female_coxph_full_trt_0_trt_1 <- summary(survfit(coxph.female_trt_0, newdata = female_trt_1))$table %>% as_tibble()
+  ps.logit.category <- cut(female_drop_na$ps.logit, breaks = c(quantile(female_drop_na$ps.logit, probs = seq(0, 1, by = 0.02))), include.lowest = T, lables = 1:50)
 
-    female_coxph_full_trt_1 <- female_coxph_full_trt_1_trt_1 %>% 
-    bind_rows(female_coxph_full_trt_1_trt_0) %>% 
+  female_coxph_full_trt_1 <- female_coxph_full_trt_1_trt_1 %>% 
+  bind_rows(female_coxph_full_trt_1_trt_0) %>% 
+  bind_cols(ps.logit = ps.logit.category) %>% 
+  select(median, ps.logit) %>% 
+  rename(median_trt1 = median,
+          ps.logit_trt1 = ps.logit)
+
+
+  female_coxph_full_trt_0 <- female_coxph_full_trt_0_trt_1 %>% 
+    bind_rows(female_coxph_full_trt_0_trt_0) %>% 
     bind_cols(ps.logit = ps.logit.category) %>% 
     select(median, ps.logit) %>% 
-    rename(median_trt1 = median,
-            ps.logit_trt1 = ps.logit)
+    rename(median_trt0 = median,
+            ps.logit_trt0 = ps.logit)
 
+  cox_hte_boot <- female_coxph_full_trt_1 %>% 
+    bind_cols(female_coxph_full_trt_0) %>% 
+    select(-ps.logit_trt1) %>% 
+    rename(ps.logit = ps.logit_trt0) %>% 
+    group_by(ps.logit) %>%
+    mutate(hte = median_trt1 -  median_trt0) %>%
+    drop_na() %>%
+    # pull(hte) %>% mean
+    summarise(lower_hte = quantile(hte, .025), upper_hte = quantile (hte, .975),hte = mean(hte), treated = mean(median_trt1), control = mean(median_trt0)) # for full model 
 
-    female_coxph_full_trt_0 <- female_coxph_full_trt_0_trt_1 %>% 
-        bind_rows(female_coxph_full_trt_0_trt_0) %>% 
-        bind_cols(ps.logit = ps.logit.category) %>% 
-        select(median, ps.logit) %>% 
-        rename(median_trt0 = median,
-                ps.logit_trt0 = ps.logit)
-
-    cox_hte_boot <- female_coxph_full_trt_1 %>% 
-        bind_cols(female_coxph_full_trt_0) %>% 
-        select(-ps.logit_trt1) %>% 
-        rename(ps.logit = ps.logit_trt0) %>% 
-        group_by(ps.logit) %>%
-        mutate(hte = median_trt1 -  median_trt0) %>%
-        drop_na() %>%
-        # pull(hte) %>% mean
-        summarise(lower_hte = quantile(hte, .025), upper_hte = quantile (hte, .975),hte = mean(hte), treated = mean(median_trt1), control = mean(median_trt0)) # for full model 
-
-    hte_bootstrap_result[,i] <- cox_hte_boot$hte
-    }, error = function(e) {
-    hte_bootstrap_result[,i] <- NA
-    })
-    }
-
+  hte_bootstrap_result[,i] <- cox_hte_boot$hte
+}
 # get the standard deviation of the bootstrap results
-sd_cox_hte <- apply(hte_bootstrap_result, 1, function(x) sd(x, na.rm = TRUE))
-se_cox_hte <- sd_cox_hte / sqrt(sum(!apply(is.na(hte_bootstrap_result),2,any)))
-
-# calculate number of rows without NA for hte_bootstrap_result
-
+sd_cox_hte <- apply(hte_bootstrap_result, 1, sd)
+se_cox_hte <- sd_cox_hte / sqrt(nrow(hte_bootstrap_result))
 ci_lower <- cox_hte$hte - 1.96 * se_cox_hte
 ci_upper <- cox_hte$hte + 1.96 * se_cox_hte
 ci_mean <- cox_hte$hte
@@ -286,6 +276,7 @@ ggplot(new_data, aes(x = ps.logit, y = ci_mean)) +
   geom_hline(yintercept = ate, color = "red") +
   xlab("Propensity Scores for Widowhood") + ylab("Age Differences between Treatment and Control")
 
+ggsave("female_naive.png", width = 8, height = 6, units = "in")
 
 # plot the results based on the linear results 
 linear.fit.ci.mean <- predict(lm(ci_mean ~ ps.logit, data = new_data), newdata = new_data)
@@ -299,6 +290,6 @@ ggplot(new_data_linear, aes(x = ps.logit, y = linear.fit.ci.mean)) +
   geom_smooth(color = "blue", se = FALSE) +
   geom_ribbon(aes(ymin = ci_lower_linear, ymax = ci_upper_linear), alpha = 0.2, fill = "blue") +
   geom_hline(yintercept = ate, color = "red") +
-  xlab("Propensity Scores for Widowhood") + ylab("Age Differences between Treatment and Control") 
+  xlab("Propensity Scores for Widowhood") + ylab("Age Differences between Treatment and Control") +
  
- ggsave("female_naive_linear_asset_3.png", width = 8, height = 6, units = "in")
+ ggsave("female_naive_linear.png", width = 8, height = 6, units = "in")
