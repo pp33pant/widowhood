@@ -321,16 +321,6 @@ filter(college != 1)
 main_line(female_noncollege)
 ggsave("full/female_noncollege_dr_line_1.png",width = 8, height = 6, units = "in")
 
-male_edu1 <- male %>%
-filter(college_homo == 1)
-main_line(male_edu1)
-ggsave("full/male_college_homo_dr_line_1.png",width = 8, height = 6, units = "in")
-
-male_edu2 <- male %>%
-filter(college_homo !=1)
-main_line(male_edu2)
-ggsave("full/male_college_homo_dr_line_2.png",width = 8, height = 6, units = "in")
-
 male_edu_homo <- male %>%
 filter(college_homo == 1 | college_homo == 4)
 main_line(male_edu_homo)
@@ -342,16 +332,6 @@ main_line(male_edu_hetero)
 ggsave("full/male_college_homo_dr_line_hetero.png",width = 8, height = 6, units = "in")
 
 
-
-female_edu1 <- female %>%
-filter(college_homo == 1)
-main_line(female_edu1)
-ggsave("full/female_college_homo_dr_line_1.png",width = 8, height = 6, units = "in")
-
-female_edu2 <- female %>%
-filter(college_homo !=1)
-main_line(female_edu2)
-ggsave("full/female_college_homo_dr_line_2.png",width = 8, height = 6, units = "in")
 
 female_edu_homo <- female %>%
 filter(college_homo == 1 | college_homo == 4)
