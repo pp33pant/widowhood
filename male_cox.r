@@ -243,7 +243,7 @@ survival <- apply(boot_results_matrix, 1, function(x) quantile(x, probs = 0.5))
 new_data$ci_lower <- ci_lower
 new_data$ci_upper <- ci_upper
 new_data$survival <- survival
-new_data$mean_survival <- mean(new_data$survival)
+new_data$mean_survival <- 1
 
 ggplot(new_data, aes(x = ps.logit)) +
   geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), 
@@ -253,7 +253,7 @@ ggplot(new_data, aes(x = ps.logit)) +
   labs(x = "Propensity Score", y = "Predicted Hazard Ratio", 
        title = "Results from Marginal Hazard Model") +
   scale_color_manual(values = c("blue", "red"), 
-                     labels = c("Individual Survival", "Mean Survival"), 
+                     labels = c("Individual Survival", "Cutoff Line"), 
                      name = "Survival Type") 
 # save the plot
 ggsave("male_survival_cox.png", width = 8, height = 6, units = "in")

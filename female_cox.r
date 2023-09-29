@@ -163,13 +163,18 @@ drop_na(female.full,start.age,stop.age,event,widow,ps.logit,birth_year,child_liv
           mean_cesd,mean_expend,max_high_bp,max_diabetes,max_cancer,max_lung,max_heart,max_stroke,max_psych,eduyrs,white,black, 
           catholic,protestant,ever_retired,labor_force, year_since_widow, year_since_child_dead, year_since_retire)
 
-coxph.full <- coxph(Surv(start.age, stop.age, event) ~ widow + ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
+coxph.full <- coxph(Surv(start.age, stop.age, event) ~ widow  + birth_year + child_liv + migration + num_shared_child + child_dead
                     +  age_diff + mean_drink_days + mean_drink_num
                     + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
                     + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
-                    + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = female.full)
+                    + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire + ps.logit, data = female.full)
 summary(coxph.full)
-
+summary(coxph.full)
+ph_test <- cox.zph(coxph.full)
+print(ph_test)
+png("full/female_ph_test.png")
+plot(ph_test, xlab = "Age", ylab = "Scaled Schoenfeld Residuals")
+dev.off()
 # directly calculate the hazard ratios for different propensity
 newdata <- expand.grid(widow = 1, ps.logit = seq(0, 1, by = 0.01))
 
@@ -243,7 +248,7 @@ survival <- apply(boot_results_matrix, 1, function(x) quantile(x, probs = 0.5))
 new_data$ci_lower <- ci_lower
 new_data$ci_upper <- ci_upper
 new_data$survival <- survival
-new_data$mean_survival <- mean(new_data$survival)
+new_data$mean_survival <- 1
 
 ggplot(new_data, aes(x = ps.logit)) +
   geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), 
@@ -253,7 +258,7 @@ ggplot(new_data, aes(x = ps.logit)) +
   labs(x = "Propensity Score", y = "Predicted Hazard Ratio", 
        title = "Results from Marginal Hazard Model") +
   scale_color_manual(values = c("blue", "red"), 
-                     labels = c("Individual Survival", "Mean Survival"), 
+                     labels = c("Individual Survival", "Cutoff Line"), 
                      name = "Survival Type") 
 # save the plot
 ggsave("female_survival_cox.png", width = 8, height = 6, units = "in")

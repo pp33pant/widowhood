@@ -103,20 +103,32 @@ female_trt_1 <- female_drop_na %>% as_tibble() %>%
   select(-widow, -hhidpn)
   
 # survival: control model
-coxph.female_trt_0 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
+coxph.female_trt_0 <- coxph(Surv(start.age, stop.age, event) ~   birth_year + child_liv + migration + num_shared_child + child_dead
                     +  age_diff + mean_drink_days + mean_drink_num
                     + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
                     + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
-                    + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = female_trt_0)
+                    + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire + ps.logit, data = female_trt_0)
 summary(coxph.female_trt_0)
 
+ph_test <- cox.zph(coxph.female_trt_0)
+print(ph_test)
+png("full/female_ph_test_control.png")
+plot(ph_test, xlab = "Age", ylab = "Scaled Schoenfeld Residuals")
+dev.off()
 # survival: treatment model
-coxph.female_trt_1 <- coxph(Surv(start.age, stop.age, event) ~  ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
+coxph.female_trt_1 <- coxph(Surv(start.age, stop.age, event) ~   birth_year + child_liv + migration + num_shared_child + child_dead
                     +  age_diff + mean_drink_days + mean_drink_num
                     + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
                     + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
-                    + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = female_trt_1)
+                    + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire + ps.logit, data = female_trt_1)
 summary(coxph.female_trt_1)
+
+ph_test <- cox.zph(coxph.female_trt_1)
+print(ph_test)
+png("full/female_ph_test_treated.png")
+plot(ph_test, xlab = "Age", ylab = "Scaled Schoenfeld Residuals")
+dev.off()
+# predict the outcome under control with trt_0:
 
 # predict the outcome under control with trt_0:
 

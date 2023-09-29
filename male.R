@@ -35,7 +35,7 @@ ps.barplot <- function(ps, group){
 }
 
 # attach data 
-male <- read_dta("male.dta")
+male <- read_dta("../male.dta")
 
 male.propensity.prediction.health <- male %>%
   select(., s_mean_drink_days,s_mean_drink_num,s_mean_hosp_time 
@@ -163,13 +163,17 @@ drop_na(male.full,start.age,stop.age,event,widow,ps.logit,birth_year,child_liv,m
           mean_cesd,mean_expend,max_high_bp,max_diabetes,max_cancer,max_lung,max_heart,max_stroke,max_psych,eduyrs,white,black, 
           catholic,protestant,ever_retired,labor_force, year_since_widow, year_since_child_dead, year_since_retire)
 
-coxph.full <- coxph(Surv(start.age, stop.age, event) ~ widow + ps.logit + birth_year + child_liv + migration + num_shared_child + child_dead
+coxph.full <- coxph(Surv(start.age, stop.age, event) ~ widow  + birth_year + child_liv + migration + num_shared_child + child_dead
                     +  age_diff + mean_drink_days + mean_drink_num
                     + mean_hosp_time + max_hosp_visit + mean_log_fam_income + max_pension + mean_bmi + max_nurs_home 
                     + mean_cesd + mean_expend + max_high_bp + max_diabetes + max_cancer + max_lung + max_heart + max_stroke + max_psych +eduyrs + white + black 
-                    + catholic + protestant + year_since_widow + year_since_child_dead +year_since_retire, data = male.full)
+                    + catholic + protestant+ year_since_child_dead +year_since_retire  + year_since_widow + ps.logit, data = male.full)
 summary(coxph.full)
-
+ph_test <- cox.zph(coxph.full)
+print(ph_test)
+png("full/male_ph_test.png")
+plot(ph_test, xlab = "Age", ylab = "Scaled Schoenfeld Residuals")
+dev.off()
 # directly calculate the hazard ratios for different propensity
 newdata <- expand.grid(widow = 1, ps.logit = seq(0, 1, by = 0.01))
 
@@ -199,7 +203,7 @@ ggplot(new_data, aes(x = ps.logit)) +
 
 # bootstrap for the confidence interval 
 # number of bootstrap samples
-B <- 1000
+B <- 100
 
 # store results
 boot_results <- list()
@@ -255,4 +259,4 @@ ggplot(new_data, aes(x = ps.logit)) +
                      labels = c("Individual Survival", "Mean Survival"), 
                      name = "Survival Type") 
 # save the plot
-ggsave("male_survival_cox.png", width = 8, height = 6, units = "in")
+ggsave("full/male_survival_cox.png", width = 8, height = 6, units = "in")
